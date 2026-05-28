@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.vicente.mapper.VideoFileMapper">
+
+    <!-- 创建表的SQL（如果不存在） -->
+    <update id="createTableIfNotExist">
+        CREATE TABLE IF NOT EXISTS video_files (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        file_name VARCHAR(255) NOT NULL,
+        creation_date DATETIME,
+        modification_date DATETIME,
+        last_access_time DATETIME,
+        file_format VARCHAR(20),
+        file_size BIGINT,
+        file_size_format VARCHAR(32),
+        file_score float(3,1),
+        file_md5 VARCHAR(32),
+        file_path VARCHAR(512) UNIQUE,
+        actor VARCHAR(255),
+        video_code VARCHAR(100),
+        create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    </update>
+
+    <!-- 批量插入或更新（使用 ON DUPLICATE KEY UPDATE） -->
+    <insert id="batchInsertOrUpdate" parameterType="java.util.List">
+        INSERT INTO video_files (
+        file_name, creation_date, modification_date,
+        last_access_time, file_format, file_size,file_size_format,
+        file_score, file_md5, file_path, actor, video_code
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.fileName}, #{item.creationDate}, #{item.modificationDate},
+            #{item.lastAccessTime}, #{item.fileFormat}, #{item.fileSize}, #{item.fileSizeFormat},
+            #{item.fileScore}, #{item.fileMd5}, #{item.filePath}, #{item.actor}, #{item.videoCode}
+            )
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        file_name = VALUES(file_name),
+        creation_date = VALUES(creation_date),
+        modification_date = VALUES(modification_date),
+        last_access_time = VALUES(last_access_time),
+        file_format = VALUES(file_format),
+        file_size = VALUES(file_size),
+        file_size_format = VALUES(file_size_format),
+        file_score = VALUES(file_score),
+        file_md5 = VALUES(file_md5),
+        actor = VALUES(actor),
+        video_code = VALUES(video_code);
+    </insert>
+
+    <!-- 单个插入或更新（可选，保留） -->
+    <insert id="insertOrUpdate" parameterType="VideoFile">
+        INSERT INTO video_files (
+        file_name, creation_date, modification_date,
+        last_access_time, file_format, file_size, file_size_format,
+        file_score, file_md5, file_path, actor, video_code
+        ) VALUES (
+        #{fileName}, #{creationDate}, #{modificationDate},
+        #{lastAccessTime}, #{fileFormat}, #{fileSize},#{item.fileSizeFormat},
+        #{item.fileScore}, #{fileMd5}, #{filePath}, #{actor}, #{videoCode}
+        )
+        ON DUPLICATE KEY UPDATE
+        file_name = VALUES(file_name),
+        creation_date = VALUES(creation_date),
+        modification_date = VALUES(modification_date),
+        last_access_time = VALUES(last_access_time),
+        file_format = VALUES(file_format),
+        file_size = VALUES(file_size),
+        file_md5 = VALUES(file_md5),
+        actor = VALUES(actor),
+        video_code = VALUES(video_code);
+    </insert>
+
+    <!-- 清空表（可选） -->
+    <delete id="truncateTable">
+        TRUNCATE TABLE video_files;
+    </delete>
+</mapper>
