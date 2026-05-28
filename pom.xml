@@ -14,6 +14,8 @@
     <maven.compiler.source>8</maven.compiler.source>
     <maven.compiler.target>8</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <javacv.version>1.5.12</javacv.version>
+    <ffmpeg.version>7.1.1-1.5.12</ffmpeg.version>
   </properties>
 
   <dependencies>
@@ -47,6 +49,36 @@
       <artifactId>commons-lang3</artifactId>
       <version>3.14.0</version>
     </dependency>
+
+    <!-- 为了获取视频时长 太大分开为操作系统-->
+    <!--<dependency>
+      <groupId>org.bytedeco</groupId>
+      <artifactId>javacv-platform</artifactId>
+      <version>1.5.12</version>
+    </dependency>-->
+    <!-- JavaCV 核心库 -->
+    <dependency>
+      <groupId>org.bytedeco</groupId>
+      <artifactId>javacv</artifactId>
+      <version>${javacv.version}</version>
+    </dependency>
+
+    <!-- Windows 64 位 FFmpeg 本地库 -->
+    <dependency>
+      <groupId>org.bytedeco</groupId>
+      <artifactId>ffmpeg</artifactId>
+      <version>${ffmpeg.version}</version>
+      <classifier>windows-x86_64</classifier>
+    </dependency>
+
+    <!-- macOS x86_64 (Intel) FFmpeg 本地库 -->
+    <dependency>
+      <groupId>org.bytedeco</groupId>
+      <artifactId>ffmpeg</artifactId>
+      <version>${ffmpeg.version}</version>
+      <classifier>macosx-x86_64</classifier>
+    </dependency>
+
   </dependencies>
 
   <build>

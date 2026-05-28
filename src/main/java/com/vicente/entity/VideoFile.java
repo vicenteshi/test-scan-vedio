@@ -26,6 +26,8 @@ public class VideoFile {
     private String actor;
     // 视频编号
     private String videoCode;
+    // 视频编号
+    private Integer videoDuration;
 
     // getters and setters
     public Long getId() { return id; }
@@ -79,5 +81,11 @@ public class VideoFile {
         this.videoCode = videoCode;
     }
 
+    public Integer getVideoDuration() {
+        return videoDuration;
+    }
 
+    public void setVideoDuration(Integer videoDuration) {
+        this.videoDuration = videoDuration;
+    }
 }

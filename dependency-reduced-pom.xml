@@ -45,6 +45,8 @@
     </dependency>
   </dependencies>
   <properties>
+    <ffmpeg.version>7.1.1-1.5.12</ffmpeg.version>
+    <javacv.version>1.5.12</javacv.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>8</maven.compiler.source>
     <maven.compiler.target>8</maven.compiler.target>

@@ -6,6 +6,7 @@ import com.vicente.util.MD5Util;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
+import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +70,9 @@ public class FileProcessor implements Runnable {
 
             // 计算MD5（可能耗时）
             vf.setFileMd5(MD5Util.calculateMD5(path));
-            Double videoDuration = getVideoDuration(path);
+            Double duration = getVideoDurationWithJavacv(path);
+            int round = duration == null ? 0: (int)Math.round(duration);
+            vf.setVideoDuration(round);
             return vf;
         } catch (Exception e) {
             logger.error("读取文件属性失败: {}", path, e);
@@ -150,13 +153,11 @@ public class FileProcessor implements Runnable {
                 "-of", "default=noprint_wrappers=1:nokey=1",
                 path.toString()
         };
-
         ProcessBuilder processBuilder = new ProcessBuilder(cmd);
-        processBuilder.redirectErrorStream(true); // 将错误流合并到输入流，简化处理
-
+        // 将错误流合并到输入流，简化处理
+        processBuilder.redirectErrorStream(true);
         try (InputStream inputStream = processBuilder.start().getInputStream();
              BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-
             String line = reader.readLine();
             if (line != null && !line.isEmpty()) {
                 // 将读取到的字符串（如 "123.456"）解析为 Double 类型并返回
@@ -165,12 +166,23 @@ public class FileProcessor implements Runnable {
                 logger.warn("未从 ffprobe 获取到时长的输出，文件: {}", path);
                 return null;
             }
-
         } catch (Exception e) {
             // 捕获异常，避免单个文件处理失败影响整体扫描
             logger.warn("调用 ffprobe 获取视频时长失败: {} - {}", path, e.getMessage());
             return null;
         }
     }
+
+    //pom引入javacv-platformjar包后可调用
+    private Double getVideoDurationWithJavacv(Path path) {
+        try (FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(path.toFile())) {
+            grabber.start();
+            return grabber.getLengthInTime() / 1_000_000.0;
+        } catch (Exception e) {
+            logger.warn("获取视频时长失败: {}", path, e);
+            return null;
+        }
+    }
+
 
 }
