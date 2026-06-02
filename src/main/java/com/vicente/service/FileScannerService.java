@@ -1,7 +1,13 @@
 package com.vicente.service;
 
+import com.vicente.entity.ImageFile;
 import com.vicente.entity.VideoFile;
+import com.vicente.enums.FileType;
+import com.vicente.extractor.ImageMetadataExtractor;
+import com.vicente.extractor.VideoMetadataExtractor;
+import com.vicente.mapper.ImageFileMapper;
 import com.vicente.mapper.VideoFileMapper;
+import com.vicente.util.FileTypeDetector;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 
@@ -21,22 +27,21 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
  * @author sws
- * @description TODO
+ * @description 使用两个队列分别存放视频和图片实体，并维护两个 Mapper。
  * @date 2026/05/26
  */
 public class FileScannerService {
     private static final Logger logger = LoggerFactory.getLogger(FileScannerService.class);
-    private static final Set<String> VIDEO_EXTENSIONS = new HashSet<>(Arrays.asList(
-            "mp4", "avi", "mkv", "mov", "wmv", "flv", "webm", "m4v", "mpg", "mpeg", "3gp"
-    ));
+    // 原有成员
     private final ExecutorService executor;
-    private final SqlSessionFactory sqlSessionFactory;   // 保留成员
-    private final Queue<VideoFile> resultQueue = new ConcurrentLinkedQueue<>();
-    // 是否使用数据库
-    private boolean useDatabase;
+    private final Queue<VideoFile> videoQueue = new ConcurrentLinkedQueue<>();
+    private final Queue<ImageFile> imageQueue = new ConcurrentLinkedQueue<>();
+    private final boolean useDatabase;
+    private final SqlSessionFactory sqlSessionFactory;
 
     public FileScannerService(int threadPoolSize, SqlSessionFactory sqlSessionFactory, boolean useDatabase) {
         this.executor = Executors.newFixedThreadPool(threadPoolSize);
@@ -50,8 +55,27 @@ public class FileScannerService {
         Files.walkFileTree(startDir, new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-                if (attrs.isRegularFile() && isVideoFile(file)) {
-                    executor.submit(new FileProcessor(file, resultQueue));
+                if (attrs.isRegularFile()) {
+                    FileType type = FileTypeDetector.detect(file);
+                    if (type == FileType.VIDEO) {
+                        executor.submit(() -> {
+                            try {
+                                VideoFile vf = new VideoMetadataExtractor().extract(file);
+                                videoQueue.offer(vf);
+                            } catch (Exception e) {
+                                logger.error("提取视频信息失败: {}", file, e);
+                            }
+                        });
+                    } else if (type == FileType.IMAGE) {
+                        executor.submit(() -> {
+                            try {
+                                ImageFile img = new ImageMetadataExtractor().extract(file);
+                                imageQueue.offer(img);
+                            } catch (Exception e) {
+                                logger.error("提取图片信息失败: {}", file, e);
+                            }
+                        });
+                    }
                 }
                 return FileVisitResult.CONTINUE;
             }
@@ -63,16 +87,6 @@ public class FileScannerService {
             }
         });
         logger.info("扫描完成，已提交所有文件任务");
-    }
-
-    private boolean isVideoFile(Path path) {
-        String fileName = path.getFileName().toString();
-        int dot = fileName.lastIndexOf('.');
-        if (dot > 0) {
-            String ext = fileName.substring(dot + 1).toLowerCase();
-            return VIDEO_EXTENSIONS.contains(ext);
-        }
-        return false;
     }
 
     public void shutdownAndWait(long timeoutSeconds) throws InterruptedException {
@@ -90,42 +104,41 @@ public class FileScannerService {
     }
 
     private void batchSaveToDatabase() {
-        int batchSize = 100;
-        List<VideoFile> batch = new ArrayList<>(batchSize);
-        int total = 0;
-        logger.info("开始批量保存，共收集到 {} 个文件", resultQueue.size());
+        try (SqlSession session = sqlSessionFactory.openSession(false)) {
+            VideoFileMapper videoMapper = session.getMapper(VideoFileMapper.class);
+            ImageFileMapper imageMapper = session.getMapper(ImageFileMapper.class);
 
-        try (SqlSession session = sqlSessionFactory.openSession(false)) { // 不自动提交
-            VideoFileMapper mapper = session.getMapper(VideoFileMapper.class);
-            while (!resultQueue.isEmpty()) {
-                VideoFile vf = resultQueue.poll();
-                if (vf != null) {
-                    batch.add(vf);
-                    total++;
-                }
-                if (batch.size() >= batchSize || resultQueue.isEmpty()) {
-                    if (!batch.isEmpty()) {
-                        try {
-                            mapper.batchInsertOrUpdate(batch);
-                            session.commit();
-                            logger.info("已批量保存 {} 条记录", batch.size());
-                        } catch (Exception e) {
-                            session.rollback();
-                            logger.error("批量保存失败，回滚批次", e);
-                            // 可考虑逐条重试等策略，这里简单打印
-                        } finally {
-                            batch.clear();
-                        }
-                    }
+            // 处理视频
+            batchProcess(session, videoQueue, videoMapper::batchInsertOrUpdate, "video");
+            // 处理图片
+            batchProcess(session, imageQueue, imageMapper::batchInsertOrUpdate, "image");
+        }
+    }
+
+    private <T> void batchProcess(SqlSession session, Queue<T> queue, Consumer<List<T>> batcher, String type) {
+        List<T> batch = new ArrayList<>(100);
+        int total = 0;
+        while (!queue.isEmpty()) {
+            T item = queue.poll();
+            if (item != null) {
+                batch.add(item);
+                total++;
+            }
+            if (batch.size() >= 100 || queue.isEmpty()) {
+                if (!batch.isEmpty()) {
+                    batcher.accept(batch);
+                    session.commit();
+                    logger.info("已批量保存 {} 条 {} 记录", batch.size(), type);
+                    batch.clear();
                 }
             }
         }
-        logger.info("批量保存完成，共处理 {} 个文件", total);
+        logger.info("批量保存 {} 完成，共 {} 个文件", type, total);
     }
 
     // CSV 文件保存
     private void saveToCsvFile() {
-        if (resultQueue.isEmpty()) {
+        if (videoQueue.isEmpty()) {
             logger.info("没有视频文件需要保存");
             return;
         }
@@ -138,10 +151,10 @@ public class FileScannerService {
                 writer.println("文件名,创建时间,修改时间,上次访问时间,格式,大小(字节),大小(可读),MD5,完整路径,主演,视频编号,分数,保存时间");
             }
             // 写入所有数据
-            for (VideoFile vf : resultQueue) {
+            for (VideoFile vf : videoQueue) {
                 writer.println(toCsvRow(vf));
             }
-            logger.info("数据已保存到文件：{}，共 {} 条记录", csvFile, resultQueue.size());
+            logger.info("数据已保存到文件：{}，共 {} 条记录", csvFile, videoQueue.size());
         } catch (Exception e) {
             logger.error("写入 CSV 文件失败", e);
         }

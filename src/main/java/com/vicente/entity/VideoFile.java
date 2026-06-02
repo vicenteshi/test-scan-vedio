@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 /**
  * @author sws
- * @description TODO
+ * @description 视频文件
  * @date 2026/05/26
  */
 public class VideoFile {

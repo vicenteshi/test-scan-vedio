@@ -1,11 +1,8 @@
 package com.vicente.service;
 
 import com.vicente.entity.VideoFile;
-import com.vicente.mapper.VideoFileMapper;
 import com.vicente.util.MD5Util;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.SqlSessionFactory;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,12 +20,12 @@ import java.util.Queue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class FileProcessor implements Runnable {
-    private static final Logger logger = LoggerFactory.getLogger(FileProcessor.class);
+public class FileProcessor222 implements Runnable {
+    private static final Logger logger = LoggerFactory.getLogger(FileProcessor222.class);
     private final Path filePath;
     private final Queue<VideoFile> resultQueue;
 
-    public FileProcessor(Path filePath, Queue<VideoFile> resultQueue) {
+    public FileProcessor222(Path filePath, Queue<VideoFile> resultQueue) {
         this.filePath = filePath;
         this.resultQueue = resultQueue;
     }
@@ -177,7 +174,11 @@ public class FileProcessor implements Runnable {
     private Double getVideoDurationWithJavacv(Path path) {
         try (FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(path.toFile())) {
             grabber.start();
-            return grabber.getLengthInTime() / 1_000_000.0;
+            // 微秒
+            long durationMicroseconds = grabber.getLengthInTime();
+            double durationSeconds = durationMicroseconds / 1_000_000.0;
+            grabber.stop();
+            return durationSeconds;
         } catch (Exception e) {
             logger.warn("获取视频时长失败: {}", path, e);
             return null;

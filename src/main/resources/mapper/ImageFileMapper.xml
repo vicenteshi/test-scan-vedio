@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.vicente.mapper.ImageFileMapper">
+
+    <!-- 创建表的SQL（如果不存在） -->
+    <update id="createTableIfNotExist">
+        CREATE TABLE IF NOT EXISTS image_files (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        file_name VARCHAR(255) NOT NULL,
+        creation_date DATETIME,
+        modification_date DATETIME,
+        last_access_time DATETIME,
+        file_format VARCHAR(20),
+        file_size BIGINT,
+        file_md5 VARCHAR(32),
+        file_path VARCHAR(512) UNIQUE,
+        width INT,
+        height INT,
+        color_space VARCHAR(50),
+        actor VARCHAR(255),
+        image_code VARCHAR(100),
+        score VARCHAR(10),
+        create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    </update>
+
+    <!-- 批量插入或更新（使用 ON DUPLICATE KEY UPDATE） -->
+    <insert id="batchInsertOrUpdate" parameterType="java.util.List">
+        INSERT INTO image_files (
+        file_name, creation_date, modification_date, last_access_time,
+        file_format, file_size, file_md5, file_path, width, height, color_space,
+        actor, image_code, score, create_time
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.fileName}, #{item.creationDate}, #{item.modificationDate}, #{item.lastAccessTime},
+            #{item.fileFormat}, #{item.fileSize}, #{item.fileMd5}, #{item.filePath},
+            #{item.width}, #{item.height}, #{item.colorSpace},
+            #{item.actor}, #{item.imageCode}, #{item.score}, #{item.createTime})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        file_name = VALUES(file_name),
+        creation_date = VALUES(creation_date),
+        modification_date = VALUES(modification_date),
+        last_access_time = VALUES(last_access_time),
+        file_format = VALUES(file_format),
+        file_size = VALUES(file_size),
+        file_md5 = VALUES(file_md5),
+        width = VALUES(width),
+        height = VALUES(height),
+        color_space = VALUES(color_space),
+        actor = VALUES(actor),
+        image_code = VALUES(image_code),
+        score = VALUES(score),
+        create_time = VALUES(create_time);
+    </insert>
+
+    <!-- 清空表（可选） -->
+    <delete id="truncateTable">
+        TRUNCATE TABLE video_files;
+    </delete>
+</mapper>

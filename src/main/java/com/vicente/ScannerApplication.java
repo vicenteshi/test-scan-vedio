@@ -3,6 +3,7 @@ package com.vicente;
 import com.vicente.config.MyBatisConfig;
 import com.vicente.service.FileScannerService;
 import org.apache.ibatis.session.SqlSessionFactory;
+import org.bytedeco.ffmpeg.global.avutil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +31,13 @@ public class ScannerApplication {
             System.exit(1);
         }
 
+        try {
+            //关闭JavaCV默认的av_log输出日志，在程序启动时设置FFmpeg的日志级别为AV_LOG_QUIET。
+            avutil.av_log_set_level(avutil.AV_LOG_QUIET);
+        } catch (Throwable ignored) {
+            // 静默处理，避免影响主流程
+            logger.info("静默处理，避免影响主流程");
+        }
         long startTime = System.currentTimeMillis();
         logger.info("=== 视频文件扫描器启动 ===");
 
@@ -45,7 +53,6 @@ public class ScannerApplication {
         if (useDatabase && sqlSessionFactory == null) {
             useDatabase = false;
         }
-
         try {
             // 扫描服务
             FileScannerService scanner = new FileScannerService(THREAD_POOL_SIZE, sqlSessionFactory, useDatabase);

@@ -1,6 +1,7 @@
 package com.vicente.config;
 
 import com.vicente.entity.VideoFile;
+import com.vicente.mapper.ImageFileMapper;
 import com.vicente.mapper.VideoFileMapper;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.datasource.pooled.PooledDataSource;
@@ -69,23 +70,31 @@ public class MyBatisConfig {
 
             // 注册 Mapper 接口
             configuration.addMapper(VideoFileMapper.class);
+            configuration.addMapper(ImageFileMapper.class);
             // 6. 手动加载同包下的 XML 映射文件（关键！）
-            String xmlResourcePath = "mapper/VideoFileMapper.xml";
-            try (InputStream xmlStream = Resources.getResourceAsStream(xmlResourcePath)) {
+            String vedioXml = "mapper/VideoFileMapper.xml";
+            try (InputStream xmlStream = Resources.getResourceAsStream(vedioXml)) {
                 if (xmlStream == null) {
-                    log.warn("找不到 XML 映射文件: {}", xmlResourcePath);
+                    log.warn("找不到 XML 映射文件: {}", vedioXml);
                     return null;
                 }
                 XMLMapperBuilder mapperBuilder = new XMLMapperBuilder(
-                        xmlStream, configuration, xmlResourcePath, configuration.getSqlFragments());
+                        xmlStream, configuration, vedioXml, configuration.getSqlFragments());
                 mapperBuilder.parse();
-                log.info("成功加载 XML 映射文件：{}", xmlResourcePath);
+                log.info("成功加载 XML 映射文件：{}", vedioXml);
             }
+            // 同样需要加载 ImageFileMapper.xml
+            String imageXml = "mapper/ImageFileMapper.xml";
+            try (InputStream is = Resources.getResourceAsStream(imageXml)) {
+                new XMLMapperBuilder(is, configuration, imageXml, configuration.getSqlFragments()).parse();
+            }
+
             // 7. 构建 SqlSessionFactory
             sqlSessionFactory = new SqlSessionFactoryBuilder().build(configuration);
             // 建表
             try (SqlSession session = sqlSessionFactory.openSession(true)) {
                 session.getMapper(VideoFileMapper.class).createTableIfNotExist();
+                session.getMapper(ImageFileMapper.class).createTableIfNotExist();
                 log.info("数据库表初始化成功");
             } catch (Exception e) {
                 log.warn("建表失败: {}", e.getMessage());
