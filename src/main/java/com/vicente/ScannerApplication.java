@@ -33,6 +33,7 @@ public class ScannerApplication {
 
         try {
             //关闭JavaCV默认的av_log输出日志，在程序启动时设置FFmpeg的日志级别为AV_LOG_QUIET。
+            //不关闭会打印很多红色的日志
             avutil.av_log_set_level(avutil.AV_LOG_QUIET);
         } catch (Throwable ignored) {
             // 静默处理，避免影响主流程
@@ -57,6 +58,7 @@ public class ScannerApplication {
             // 扫描服务
             FileScannerService scanner = new FileScannerService(THREAD_POOL_SIZE, sqlSessionFactory, useDatabase);
             scanner.scanDirectory(scanPath);
+            scanner.startBatchSaver();
             scanner.shutdownAndWait(SHUTDOWN_TIMEOUT_SECONDS);
             long elapsed = System.currentTimeMillis() - startTime;
             logger.info("扫描完成，耗时 {} 秒", elapsed / 1000.0);

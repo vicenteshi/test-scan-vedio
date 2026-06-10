@@ -57,7 +57,7 @@
       <version>1.5.12</version>
     </dependency>-->
     <!-- JavaCV 核心库 -->
-    <dependency>
+   <dependency>
       <groupId>org.bytedeco</groupId>
       <artifactId>javacv</artifactId>
       <version>${javacv.version}</version>
