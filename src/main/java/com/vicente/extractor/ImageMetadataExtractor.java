@@ -2,22 +2,15 @@ package com.vicente.extractor;
 
 import com.vicente.entity.ImageFile;
 import com.vicente.util.MD5Util;
-import org.bytedeco.opencv.global.opencv_imgcodecs;
-import org.bytedeco.opencv.opencv_core.Mat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.bytedeco.opencv.opencv_core.Mat;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
-
-import static org.bytedeco.opencv.global.opencv_imgcodecs.imread;
-
-
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -46,6 +39,7 @@ public class ImageMetadataExtractor implements MetadataExtractor<ImageFile> {
         img.setFileFormat(dot > 0 ? fileName.substring(dot + 1).toLowerCase() : "");
         img.setFileSize(attrs.size());
         img.setFilePath(path.toAbsolutePath().toString());
+        img.setFolderName(getParentFolderName(path));
         img.setFileMd5(MD5Util.calculateMD5(path));
         img.setCreateTime(LocalDateTime.now());
         //只解析文件头部，不解码像素数据，性能远优于 ImageIO.read()
@@ -78,4 +72,14 @@ public class ImageMetadataExtractor implements MetadataExtractor<ImageFile> {
 
     @Override
     public String getFileType() { return "IMAGE"; }
+
+    public static String getParentFolderName(Path path) {
+        //Path path = Paths.get(filePath);
+        Path parent = path.getParent();
+        if (parent == null) {
+            return "";   // 或返回 null，根据业务决定
+        }
+        return parent.getFileName().toString();
+    }
+
 }

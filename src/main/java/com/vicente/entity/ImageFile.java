@@ -21,12 +21,10 @@ public class ImageFile {
     private Integer width;
     // 高度(px)
     private Integer height;
-    // 色彩空间，如 sRGB
-    private String colorSpace;
+    // 文件夹名称
+    private String folderName;
     // 可复用（作者）
     private String actor;
-    // 可复用（编号）
-    private String imageCode;
     // 可复用
     private String score;
     private LocalDateTime createTime;
@@ -119,12 +117,12 @@ public class ImageFile {
         this.height = height;
     }
 
-    public String getColorSpace() {
-        return colorSpace;
+    public String getFolderName() {
+        return folderName;
     }
 
-    public void setColorSpace(String colorSpace) {
-        this.colorSpace = colorSpace;
+    public void setFolderName(String folderName) {
+        this.folderName = folderName;
     }
 
     public String getActor() {
@@ -133,14 +131,6 @@ public class ImageFile {
 
     public void setActor(String actor) {
         this.actor = actor;
-    }
-
-    public String getImageCode() {
-        return imageCode;
-    }
-
-    public void setImageCode(String imageCode) {
-        this.imageCode = imageCode;
     }
 
     public String getScore() {

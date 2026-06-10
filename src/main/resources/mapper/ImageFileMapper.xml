@@ -17,9 +17,8 @@
         file_path VARCHAR(512) UNIQUE,
         width INT,
         height INT,
-        color_space VARCHAR(50),
+        folder_name VARCHAR(255),
         actor VARCHAR(255),
-        image_code VARCHAR(100),
         score VARCHAR(10),
         create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -29,14 +28,14 @@
     <insert id="batchInsertOrUpdate" parameterType="java.util.List">
         INSERT INTO image_files (
         file_name, creation_date, modification_date, last_access_time,
-        file_format, file_size, file_md5, file_path, width, height, color_space,
-        actor, image_code, score, create_time
+        file_format, file_size, file_md5, file_path, width, height, folder_name,
+        actor, score, create_time
         ) VALUES
         <foreach collection="list" item="item" separator=",">
             (#{item.fileName}, #{item.creationDate}, #{item.modificationDate}, #{item.lastAccessTime},
             #{item.fileFormat}, #{item.fileSize}, #{item.fileMd5}, #{item.filePath},
-            #{item.width}, #{item.height}, #{item.colorSpace},
-            #{item.actor}, #{item.imageCode}, #{item.score}, #{item.createTime})
+            #{item.width}, #{item.height}, #{item.folderName},
+            #{item.actor}, #{item.score}, #{item.createTime})
         </foreach>
         ON DUPLICATE KEY UPDATE
         file_name = VALUES(file_name),
@@ -48,9 +47,8 @@
         file_md5 = VALUES(file_md5),
         width = VALUES(width),
         height = VALUES(height),
-        color_space = VALUES(color_space),
+        folder_name = VALUES(folder_name),
         actor = VALUES(actor),
-        image_code = VALUES(image_code),
         score = VALUES(score),
         create_time = VALUES(create_time);
     </insert>

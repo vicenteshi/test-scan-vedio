@@ -2,6 +2,7 @@ package com.vicente.extractor;
 
 import com.vicente.entity.VideoFile;
 import com.vicente.util.MD5Util;
+import com.vicente.util.StreamingXXHash;
 import org.apache.commons.lang3.StringUtils;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.slf4j.Logger;
@@ -12,6 +13,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -40,6 +42,7 @@ public class VideoMetadataExtractor implements MetadataExtractor<VideoFile> {
         vf.setFileFormat(dotIndex > 0 ? fileName.substring(dotIndex + 1).toLowerCase() : "");
         vf.setFileSize(attrs.size());
         vf.setFilePath(path.toAbsolutePath().toString());
+        vf.setFolderName(getParentFolderName(path));
         // 这里可以添加从文件名解析主演、视频编号的逻辑，或者留空手动填充
         // 示例：根据文件名规则填充，比如 "S01E02.mp4" -> videoCode = "S01E02"
         // 您可以根据实际需求实现
@@ -49,7 +52,11 @@ public class VideoMetadataExtractor implements MetadataExtractor<VideoFile> {
         vf.setFileScore(extractScore(fileName));
 
         // 计算MD5（可能耗时）
-        vf.setFileMd5(MD5Util.calculateMD5(path));
+        //vf.setFileMd5(MD5Util.calculateMD5(path));
+        //比Md5性能好，大视频文件时快很多
+        long xxHash = StreamingXXHash.xxHash64(path);
+        vf.setFileMd5(Long.toHexString(xxHash));
+
         Double duration = getVideoDurationWithJavacv(path);
         int round = duration == null ? 0: (int)Math.round(duration);
         vf.setVideoDuration(round);
@@ -168,6 +175,16 @@ public class VideoMetadataExtractor implements MetadataExtractor<VideoFile> {
             return null;
         }
     }
+
+    public static String getParentFolderName(Path path) {
+        //Path path = Paths.get(filePath);
+        Path parent = path.getParent();
+        if (parent == null) {
+            return "";   // 或返回 null，根据业务决定
+        }
+        return parent.getFileName().toString();
+    }
+
 
 
 }

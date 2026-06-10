@@ -18,7 +18,8 @@ public class VideoFile {
     private String fileMd5;
     // 存储绝对路径，便于定位
     private String filePath;
-
+    //文件夹名称
+    private String folderName;
     // 新增字段
     private String fileSizeFormat;
     private Float fileScore;
@@ -48,6 +49,14 @@ public class VideoFile {
     public void setFileMd5(String fileMd5) { this.fileMd5 = fileMd5; }
     public String getFilePath() { return filePath; }
     public void setFilePath(String filePath) { this.filePath = filePath; }
+
+    public String getFolderName() {
+        return folderName;
+    }
+
+    public void setFolderName(String folderName) {
+        this.folderName = folderName;
+    }
 
     public String getFileSizeFormat() {
         return fileSizeFormat;

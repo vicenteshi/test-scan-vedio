@@ -79,6 +79,13 @@
       <classifier>macosx-x86_64</classifier>
     </dependency>
 
+    <!-- 非加密哈希用于大文件去重 -->
+    <dependency>
+      <groupId>org.lz4</groupId>
+      <artifactId>lz4-java</artifactId>
+      <version>1.8.0</version> <!-- 建议使用最新稳定版 -->
+    </dependency>
+
   </dependencies>
 
   <build>

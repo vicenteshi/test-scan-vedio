@@ -1,4 +1,14 @@
 # test-scan-vedio
+背景：扫描文件夹，递归获取视频和图片文件，收集文件信息并保存到数据库中。
+Program arguments：/Users/vicente/Documents/个人/手机文件
+jar包执行：java -jar test-scan-vedio.jar /Users/vicente/Documents/个人/手机文件
+
+## 数据覆盖保存
+ON DUPLICATE KEY UPDATE 是 MySQL 的扩展语法，它的作用是：当尝试插入一条记录时，如果违反了唯一约束（主键或唯一索引），则执行 UPDATE 部分指定的更新操作；如果没有冲突，则正常插入新记录。
+批量保存方法batchInsertOrUpdate添加了ON DUPLICATE KEY UPDATE，file_path是唯一索引，所以同路径文件保存时是更新数据即覆盖，不会插入新数据。
+
+
+## 其他
 方案一：使用 Personal Access Token 代替密码（推荐新手）
 1. 生成一个 Token
 登录 GitHub，点击右上角头像 → Settings → 左下角 Developer settings → Personal access tokens → Tokens (classic) → Generate new token (classic)

@@ -17,6 +17,7 @@
         file_score float(3,1),
         file_md5 VARCHAR(32),
         file_path VARCHAR(512) UNIQUE,
+        folder_name VARCHAR(255),
         actor VARCHAR(255),
         video_code VARCHAR(100),
         video_duration float(8,2),
@@ -30,14 +31,14 @@
         file_name, creation_date, modification_date,
         last_access_time, file_format, file_size,
         file_size_format, file_score, file_md5,
-        file_path, actor, video_code,video_duration
+        file_path, folder_name,actor, video_code,video_duration
         ) VALUES
         <foreach collection="list" item="item" separator=",">
             (
             #{item.fileName}, #{item.creationDate}, #{item.modificationDate},
             #{item.lastAccessTime}, #{item.fileFormat}, #{item.fileSize},
             #{item.fileSizeFormat}, #{item.fileScore}, #{item.fileMd5},
-            #{item.filePath}, #{item.actor}, #{item.videoCode}, #{item.videoDuration}
+            #{item.filePath}, #{item.folderName}, #{item.actor}, #{item.videoCode}, #{item.videoDuration}
             )
         </foreach>
         ON DUPLICATE KEY UPDATE
@@ -50,6 +51,7 @@
         file_size_format = VALUES(file_size_format),
         file_score = VALUES(file_score),
         file_md5 = VALUES(file_md5),
+        folder_name = VALUES(folder_name),
         actor = VALUES(actor),
         video_code = VALUES(video_code),
         video_duration = VALUES(video_duration);
@@ -61,12 +63,12 @@
         file_name, creation_date, modification_date,
         last_access_time, file_format, file_size,
         file_size_format, file_score, file_md5,
-        file_path, actor, video_code, video_duration
+        file_path,folder_name, actor, video_code, video_duration
         ) VALUES (
         #{fileName}, #{creationDate}, #{modificationDate},
         #{lastAccessTime}, #{fileFormat}, #{fileSize},
         #{item.fileSizeFormat}, #{item.fileScore}, #{fileMd5},
-        #{filePath}, #{actor}, #{videoCode}, #{item.videoDuration}
+        #{filePath}, #{folderName}, #{actor}, #{videoCode}, #{item.videoDuration}
         )
         ON DUPLICATE KEY UPDATE
         file_name = VALUES(file_name),
@@ -76,6 +78,7 @@
         file_format = VALUES(file_format),
         file_size = VALUES(file_size),
         file_md5 = VALUES(file_md5),
+        folder_name = VALUES(folder_name),
         actor = VALUES(actor),
         video_code = VALUES(video_code),
         video_duration = VALUES(video_duration);
