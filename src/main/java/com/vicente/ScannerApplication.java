@@ -57,6 +57,8 @@ public class ScannerApplication {
         try {
             // 扫描服务
             FileScannerService scanner = new FileScannerService(THREAD_POOL_SIZE, sqlSessionFactory, useDatabase);
+            // 1. 加载内存快照（仅一次查询）
+            scanner.loadSnapshotCache();
             scanner.scanDirectory(scanPath);
             scanner.startBatchSaver();
             scanner.shutdownAndWait(SHUTDOWN_TIMEOUT_SECONDS);

@@ -28,6 +28,10 @@ public class ImageFile {
     // 可复用
     private String score;
     private LocalDateTime createTime;
+    //上次扫描时间
+    private LocalDateTime lastScanTime;
+    //文件inode+设备ID
+    private String fileInode;
 
     public Long getId() {
         return id;
@@ -147,5 +151,21 @@ public class ImageFile {
 
     public void setCreateTime(LocalDateTime createTime) {
         this.createTime = createTime;
+    }
+
+    public LocalDateTime getLastScanTime() {
+        return lastScanTime;
+    }
+
+    public void setLastScanTime(LocalDateTime lastScanTime) {
+        this.lastScanTime = lastScanTime;
+    }
+
+    public String getFileInode() {
+        return fileInode;
+    }
+
+    public void setFileInode(String fileInode) {
+        this.fileInode = fileInode;
     }
 }

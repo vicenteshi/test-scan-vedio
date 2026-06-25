@@ -54,6 +54,10 @@ public class ImageMetadataExtractor implements MetadataExtractor<ImageFile> {
         } catch (Exception e) {
             logger.warn("读取图片尺寸失败: {}", path, e);
         }
+        img.setLastScanTime(LocalDateTime.now());
+        // 3. 获取 fileKey (跨平台的 inode + device ID)
+        String fileKey = VideoMetadataExtractor.getFileKey(path);
+        img.setFileInode(fileKey);
 
         // 读取图片尺寸
        /* try (InputStream is = Files.newInputStream(path)) {

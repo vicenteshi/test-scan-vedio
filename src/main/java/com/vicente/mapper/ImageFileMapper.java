@@ -14,4 +14,5 @@ public interface ImageFileMapper {
     void createTableIfNotExist();
     void batchInsertOrUpdate(List<ImageFile> list);
     void truncateTable();
+    List<ImageFile> selectAllSnapshots();
 }

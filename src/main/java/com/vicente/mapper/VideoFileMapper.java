@@ -22,4 +22,8 @@ public interface VideoFileMapper {
 
     // 可选：清空表（测试用）
     void truncateTable();
+
+    VideoFile selectByFilePath(@Param("filePath") String filePath);
+
+    List<VideoFile> selectAllSnapshots();
 }

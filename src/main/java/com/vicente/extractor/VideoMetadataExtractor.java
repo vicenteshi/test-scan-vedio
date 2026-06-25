@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
@@ -50,6 +51,10 @@ public class VideoMetadataExtractor implements MetadataExtractor<VideoFile> {
         vf.setActor(extractActor(fileName));
         vf.setFileSizeFormat(getFileSizeFormatted(attrs.size()));
         vf.setFileScore(extractScore(fileName));
+        vf.setLastScanTime(LocalDateTime.now());
+        // 3. 获取 fileKey (跨平台的 inode + device ID)
+        String fileKey = getFileKey(path);
+        vf.setFileInode(fileKey);
 
         // 计算MD5（可能耗时）
         //vf.setFileMd5(MD5Util.calculateMD5(path));
@@ -67,6 +72,23 @@ public class VideoMetadataExtractor implements MetadataExtractor<VideoFile> {
     public String getFileType() {
         return "VIDEO";
     }
+
+    /**
+     * 获取文件的唯一标识符（对应 inode + device ID）
+     * @param path 文件路径
+     * @return 文件唯一标识的字符串表示，如果不可用则返回 null
+     */
+    public static String getFileKey(Path path) {
+        try {
+            BasicFileAttributes attrs = Files.readAttributes(path, BasicFileAttributes.class);
+            Object fileKey = attrs.fileKey();
+            return fileKey != null ? fileKey.toString() : null;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
 
     private LocalDateTime toLocalDateTime(long millis) {
         return LocalDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneId.systemDefault());

@@ -31,14 +31,16 @@
         file_name, creation_date, modification_date,
         last_access_time, file_format, file_size,
         file_size_format, file_score, file_md5,
-        file_path, folder_name,actor, video_code,video_duration
+        file_path, folder_name,actor, video_code,video_duration,
+        last_scan_time,file_inode
         ) VALUES
         <foreach collection="list" item="item" separator=",">
             (
             #{item.fileName}, #{item.creationDate}, #{item.modificationDate},
             #{item.lastAccessTime}, #{item.fileFormat}, #{item.fileSize},
             #{item.fileSizeFormat}, #{item.fileScore}, #{item.fileMd5},
-            #{item.filePath}, #{item.folderName}, #{item.actor}, #{item.videoCode}, #{item.videoDuration}
+            #{item.filePath}, #{item.folderName}, #{item.actor}, #{item.videoCode}, #{item.videoDuration},
+            #{item.lastScanTime}, #{item.fileInode}
             )
         </foreach>
         ON DUPLICATE KEY UPDATE
@@ -54,7 +56,9 @@
         folder_name = VALUES(folder_name),
         actor = VALUES(actor),
         video_code = VALUES(video_code),
-        video_duration = VALUES(video_duration);
+        video_duration = VALUES(video_duration),
+        last_scan_time = VALUES(last_scan_time),
+        file_inode = VALUES(file_inode);
     </insert>
 
     <!-- 单个插入或更新（可选，保留） -->
@@ -88,4 +92,17 @@
     <delete id="truncateTable">
         TRUNCATE TABLE video_files;
     </delete>
+
+    <select id="selectByFilePath" resultType="VideoFile">
+        SELECT *
+        FROM video_files
+        WHERE file_path = #{filePath}
+        ORDER BY last_scan_time DESC
+        LIMIT 1
+    </select>
+
+    <select id="selectAllSnapshots" resultType="VideoFile">
+        SELECT file_path, file_size, modification_date, last_scan_time
+        FROM video_files
+    </select>
 </mapper>

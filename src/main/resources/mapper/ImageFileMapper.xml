@@ -29,13 +29,13 @@
         INSERT INTO image_files (
         file_name, creation_date, modification_date, last_access_time,
         file_format, file_size, file_md5, file_path, width, height, folder_name,
-        actor, score, create_time
+        actor, score, create_time,last_scan_time,file_inode
         ) VALUES
         <foreach collection="list" item="item" separator=",">
             (#{item.fileName}, #{item.creationDate}, #{item.modificationDate}, #{item.lastAccessTime},
             #{item.fileFormat}, #{item.fileSize}, #{item.fileMd5}, #{item.filePath},
             #{item.width}, #{item.height}, #{item.folderName},
-            #{item.actor}, #{item.score}, #{item.createTime})
+            #{item.actor}, #{item.score}, #{item.createTime},#{item.lastScanTime}, #{item.fileInode})
         </foreach>
         ON DUPLICATE KEY UPDATE
         file_name = VALUES(file_name),
@@ -50,11 +50,19 @@
         folder_name = VALUES(folder_name),
         actor = VALUES(actor),
         score = VALUES(score),
-        create_time = VALUES(create_time);
+        create_time = VALUES(create_time),
+        last_scan_time = VALUES(last_scan_time),
+        file_inode = VALUES(file_inode);
     </insert>
 
     <!-- 清空表（可选） -->
     <delete id="truncateTable">
-        TRUNCATE TABLE video_files;
+        TRUNCATE TABLE image_files;
     </delete>
+
+    <select id="selectAllSnapshots" resultType="com.vicente.entity.ImageFile">
+        SELECT file_path, file_size, modification_date, last_scan_time
+        FROM image_files
+    </select>
+
 </mapper>
