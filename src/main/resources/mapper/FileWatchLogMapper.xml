@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.vicente.mapper.FileWatchLogMapper">
+
+    <insert id="insertLog">
+        INSERT INTO file_watch_log
+        (file_path, event_type, event_time, is_processed)
+        VALUES (#{filePath}, #{eventType}, #{eventTime}, 0)
+    </insert>
+
+    <update id="markProcessed">
+        UPDATE file_watch_log
+        SET is_processed = 1, processed_time = NOW()
+        WHERE file_path = #{filePath}
+        AND event_time = #{eventTime}
+    </update>
+
+    <update id="markAllProcessedByPathAndType">
+        UPDATE file_watch_log SET is_processed = 1, processed_time = NOW()
+        WHERE file_path = #{filePath} AND event_type = #{eventType} AND is_processed = 0
+    </update>
+
+</mapper>

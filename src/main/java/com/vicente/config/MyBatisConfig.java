@@ -1,6 +1,7 @@
 package com.vicente.config;
 
 import com.vicente.entity.VideoFile;
+import com.vicente.mapper.FileWatchLogMapper;
 import com.vicente.mapper.ImageFileMapper;
 import com.vicente.mapper.VideoFileMapper;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
@@ -71,24 +72,30 @@ public class MyBatisConfig {
             // 注册 Mapper 接口
             configuration.addMapper(VideoFileMapper.class);
             configuration.addMapper(ImageFileMapper.class);
+            configuration.addMapper(FileWatchLogMapper.class);
             // 6. 手动加载同包下的 XML 映射文件（关键！）
-            String vedioXml = "mapper/VideoFileMapper.xml";
-            try (InputStream xmlStream = Resources.getResourceAsStream(vedioXml)) {
-                if (xmlStream == null) {
-                    log.warn("找不到 XML 映射文件: {}", vedioXml);
-                    return null;
-                }
-                XMLMapperBuilder mapperBuilder = new XMLMapperBuilder(
-                        xmlStream, configuration, vedioXml, configuration.getSqlFragments());
-                mapperBuilder.parse();
-                log.info("成功加载 XML 映射文件：{}", vedioXml);
-            }
-            // 同样需要加载 ImageFileMapper.xml
-            String imageXml = "mapper/ImageFileMapper.xml";
-            try (InputStream is = Resources.getResourceAsStream(imageXml)) {
-                new XMLMapperBuilder(is, configuration, imageXml, configuration.getSqlFragments()).parse();
-            }
+            // 在 configuration 设置后、构建 SqlSessionFactory 之前添加
+            String[] mapperXmls = {
+                    "mapper/VideoFileMapper.xml",
+                    "mapper/ImageFileMapper.xml",
+                    "mapper/FileWatchLogMapper.xml"
+                    // 以后新增 Mapper 只需在这里加一行
+            };
 
+            for (String xmlPath : mapperXmls) {
+                try (InputStream is = Resources.getResourceAsStream(xmlPath)) {
+                    if (is != null) {
+                        XMLMapperBuilder builder = new XMLMapperBuilder(
+                                is, configuration, xmlPath, configuration.getSqlFragments());
+                        builder.parse();
+                        log.info("成功加载 XML 映射文件：{}", xmlPath);
+                    } else {
+                        log.warn("找不到 XML 映射文件：{}", xmlPath);
+                    }
+                } catch (Exception e) {
+                    log.error("加载 XML 失败：{}", xmlPath, e);
+                }
+            }
             // 7. 构建 SqlSessionFactory
             sqlSessionFactory = new SqlSessionFactoryBuilder().build(configuration);
             // 建表

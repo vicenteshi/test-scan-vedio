@@ -68,7 +68,7 @@ public class ScannerApplication {
             logger.info("扫描完成，耗时 {} 秒", elapsed / 1000.0);
             // 启动实时监听（可选）
 
-            DirectoryWatcher watcher = new DirectoryWatcher(scanPath, scanner);
+            DirectoryWatcher watcher = new DirectoryWatcher(scanPath, scanner,sqlSessionFactory);
             Thread watcherThread = new Thread(watcher, "directory-watcher");
             // 设为守护线程，随主程序退出；不要设为守护线程，确保程序能响应停止信号
             watcherThread.setDaemon(false);
