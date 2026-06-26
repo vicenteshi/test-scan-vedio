@@ -1,6 +1,8 @@
 package com.vicente.extractor;
 
 import com.vicente.entity.ImageFile;
+import com.vicente.generate.ImageThumbnailGenerator;
+import com.vicente.generate.VideoThumbnailGenerator;
 import com.vicente.util.MD5Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +60,13 @@ public class ImageMetadataExtractor implements MetadataExtractor<ImageFile> {
         // 3. 获取 fileKey (跨平台的 inode + device ID)
         String fileKey = VideoMetadataExtractor.getFileKey(path);
         img.setFileInode(fileKey);
-
+        // 2. 生成缩略图，指定宽按原图比例计算出对应尺寸
+        Path thumbnailPath = path.resolveSibling("/data/bbb/thumbnails/" + path.getFileName().toString() + ".jpg");
+        Files.createDirectories(thumbnailPath.getParent());
+        boolean success = ImageThumbnailGenerator.generateThumbnail(path, thumbnailPath, 200);
+        if (success) {
+            //img.setThumbnailPath(thumbnailPath.toString());
+        }
         // 读取图片尺寸
        /* try (InputStream is = Files.newInputStream(path)) {
             BufferedImage bi = ImageIO.read(is);

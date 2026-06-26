@@ -1,7 +1,7 @@
 package com.vicente.extractor;
 
 import com.vicente.entity.VideoFile;
-import com.vicente.util.MD5Util;
+import com.vicente.generate.VideoThumbnailGenerator;
 import com.vicente.util.StreamingXXHash;
 import org.apache.commons.lang3.StringUtils;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
@@ -14,7 +14,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -65,6 +64,16 @@ public class VideoMetadataExtractor implements MetadataExtractor<VideoFile> {
         Double duration = getVideoDurationWithJavacv(path);
         int round = duration == null ? 0: (int)Math.round(duration);
         vf.setVideoDuration(round);
+
+        // 2. 生成缩略图
+        // 定义缩略图存储路径，例如：原文件同目录下的 thumbnails/ 文件夹
+        Path thumbnailPath = path.resolveSibling("/data/aaa/thumbnails/" + path.getFileName().toString() + ".jpg");
+        Files.createDirectories(thumbnailPath.getParent()); // 确保目录存在
+        boolean success = VideoThumbnailGenerator.generateThumbnail(path, thumbnailPath, 5); // 截取第5秒
+        if (success) {
+            //vf.setThumbnailPath(thumbnailPath.toString());
+        }
+
         return vf;
     }
 
