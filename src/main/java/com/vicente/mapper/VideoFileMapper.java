@@ -26,4 +26,8 @@ public interface VideoFileMapper {
     VideoFile selectByFilePath(@Param("filePath") String filePath);
 
     List<VideoFile> selectAllSnapshots();
+
+    int deleteByFilePath(@Param("filePath") String filePath);
+
+
 }

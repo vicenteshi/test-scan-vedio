@@ -105,4 +105,10 @@
         SELECT file_path, file_size, modification_date, last_scan_time
         FROM video_files
     </select>
+
+    <!-- VideoFileMapper.xml -->
+    <update id="deleteByFilePath" parameterType="string">
+        update video_files set is_delete = 1
+        where file_path = #{filePath}
+    </update>
 </mapper>

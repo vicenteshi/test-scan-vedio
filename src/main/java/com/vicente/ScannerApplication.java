@@ -1,6 +1,7 @@
 package com.vicente;
 
 import com.vicente.config.MyBatisConfig;
+import com.vicente.scheduler.DirectoryWatcher;
 import com.vicente.service.FileScannerService;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.bytedeco.ffmpeg.global.avutil;
@@ -61,9 +62,31 @@ public class ScannerApplication {
             scanner.loadSnapshotCache();
             scanner.scanDirectory(scanPath);
             scanner.startBatchSaver();
-            scanner.shutdownAndWait(SHUTDOWN_TIMEOUT_SECONDS);
+            //scanner.shutdownAndWait(SHUTDOWN_TIMEOUT_SECONDS);
+
             long elapsed = System.currentTimeMillis() - startTime;
             logger.info("扫描完成，耗时 {} 秒", elapsed / 1000.0);
+            // 启动实时监听（可选）
+
+            DirectoryWatcher watcher = new DirectoryWatcher(scanPath, scanner);
+            Thread watcherThread = new Thread(watcher, "directory-watcher");
+            // 设为守护线程，随主程序退出；不要设为守护线程，确保程序能响应停止信号
+            watcherThread.setDaemon(false);
+            watcherThread.start();
+
+            // 4. 主线程保持运行，等待退出信号（例如 Ctrl+C）
+            logger.info("实时监听已启动，按 Ctrl+C 退出");
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                logger.info("收到关闭信号，正在关闭服务...");
+                try {
+                    watcher.stop();
+                    scanner.shutdownAndWait(60); // 优雅关闭，等待队列处理完
+                } catch (Exception e) {
+                    logger.error("关闭失败", e);
+                }
+            }));
+            // 让主线程一直等待（或使用 CountDownLatch）
+            Thread.currentThread().join();
         } catch (Exception e) {
             logger.error("程序运行失败", e);
             System.exit(1);

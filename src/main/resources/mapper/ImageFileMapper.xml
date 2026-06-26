@@ -65,4 +65,9 @@
         FROM image_files
     </select>
 
+    <update id="deleteByFilePath" parameterType="string">
+        update image_files set is_delete = 1
+        where file_path = #{filePath}
+    </update>
+
 </mapper>

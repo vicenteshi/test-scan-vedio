@@ -181,16 +181,7 @@ public class FileScannerService {
                     if (currentCount % 100 == 0) {
                         logger.info("已扫描文件数: {}, 已提交到提取队列", currentCount);
                     }
-                    FileType type = FileTypeDetector.detect(file);
-                    if (type == FileType.VIDEO) {
-                        totalVideo.incrementAndGet();
-                        pendingTasks.incrementAndGet();
-                        extractorPool.submit(() -> extractVideo(file));
-                    } else if (type == FileType.IMAGE) {
-                        totalImage.incrementAndGet();
-                        pendingTasks.incrementAndGet();
-                        extractorPool.submit(() -> extractImage(file));
-                    }
+                    submitFileForExtraction(file);
                 } else {
                     // 文件未变化，可以仅更新 last_scan_time（可选），但我们不在此处处理，由保存时统一更新
                     logger.info("文件未变化，跳过: {}", filePath);
@@ -424,6 +415,48 @@ public class FileScannerService {
             logger.error("加载快照失败，将退化为全量扫描", e);
             snapshotCache = new HashMap<>(); // 降级
         }
+    }
+
+    /**
+     * 供 WatchService 调用：提交单个文件进行提取
+     */
+    public void submitFileForExtraction(Path file) {
+        // 先检查文件类型
+        FileType type = FileTypeDetector.detect(file);
+        if (type == FileType.VIDEO) {
+            totalVideo.incrementAndGet();
+            pendingTasks.incrementAndGet();
+            extractorPool.submit(() -> extractVideo(file));
+        } else if (type == FileType.IMAGE) {
+            totalImage.incrementAndGet();
+            pendingTasks.incrementAndGet();
+            extractorPool.submit(() -> extractImage(file));
+        } else {
+            logger.debug("忽略非媒体文件: {}", file);
+        }
+    }
+
+    /**
+     * 供 WatchService 调用：删除文件记录
+     */
+    public void deleteFileRecord(Path file) {
+        if (useDatabase) {
+            try (SqlSession session = sqlSessionFactory.openSession(true)) {
+                VideoFileMapper videoMapper = session.getMapper(VideoFileMapper.class);
+                ImageFileMapper imageMapper = session.getMapper(ImageFileMapper.class);
+                String filePath = file.toString();
+                // 尝试删除视频记录
+                int deletedVideo = videoMapper.deleteByFilePath(filePath);
+                // 尝试删除图片记录
+                int deletedImage = imageMapper.deleteByFilePath(filePath);
+                if (deletedVideo > 0 || deletedImage > 0) {
+                    logger.info("数据库已删除记录: {}", filePath);
+                }
+            } catch (Exception e) {
+                logger.error("删除记录失败: {}", file, e);
+            }
+        }
+        // 如果是 CSV 模式，可能需要重新生成整个 CSV（较复杂，可忽略）
     }
 
 

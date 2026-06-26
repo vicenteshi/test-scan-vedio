@@ -1,6 +1,7 @@
 package com.vicente.mapper;
 
 import com.vicente.entity.ImageFile;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -15,4 +16,5 @@ public interface ImageFileMapper {
     void batchInsertOrUpdate(List<ImageFile> list);
     void truncateTable();
     List<ImageFile> selectAllSnapshots();
+    int deleteByFilePath(@Param("filePath") String filePath);
 }

@@ -61,12 +61,12 @@ public class ImageMetadataExtractor implements MetadataExtractor<ImageFile> {
         String fileKey = VideoMetadataExtractor.getFileKey(path);
         img.setFileInode(fileKey);
         // 2. 生成缩略图，指定宽按原图比例计算出对应尺寸
-        Path thumbnailPath = path.resolveSibling("/data/bbb/thumbnails/" + path.getFileName().toString() + ".jpg");
+        /*Path thumbnailPath = path.resolveSibling("/data/bbb/thumbnails/" + path.getFileName().toString() + ".jpg");
         Files.createDirectories(thumbnailPath.getParent());
         boolean success = ImageThumbnailGenerator.generateThumbnail(path, thumbnailPath, 200);
         if (success) {
-            //img.setThumbnailPath(thumbnailPath.toString());
-        }
+            img.setThumbnailPath(thumbnailPath.toString());
+        }*/
         // 读取图片尺寸
        /* try (InputStream is = Files.newInputStream(path)) {
             BufferedImage bi = ImageIO.read(is);
